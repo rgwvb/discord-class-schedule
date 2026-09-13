@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>青蛙課表</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">CLASS SCHEDULE</p>
+        <h1>青蛙課表</h1>
+        <p class="sub">網站預覽・圖片產生・Discord 每日公告</p>
+      </div>
+      <img class="frog" src="assets/frog.svg" alt="青蛙吉祥物" />
+    </section>
+
+    <section class="toolbar">
+      <div id="dayTabs" class="tabs"></div>
+      <p id="updated" class="updated"></p>
+    </section>
+
+    <section id="schedule" class="schedule" aria-live="polite"></section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
