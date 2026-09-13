@@ -1,6 +1,11 @@
 name: Schedule Bot
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/schedule-bot.yml'
   schedule:
     - cron: '0 23 * * *' # 07:00 Asia/Taipei
     - cron: '0 16 * * *' # 00:00 Asia/Taipei
@@ -24,7 +29,7 @@ concurrency:
 
 jobs:
   sync-send:
-    if: github.event_name == 'workflow_dispatch' && inputs.task == 'sync-send' || github.event.schedule == '0 23 * * *'
+    if: (github.event_name == 'workflow_dispatch' && inputs.task == 'sync-send') || github.event.schedule == '0 23 * * *' || github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
       ONEDRIVE_XLSX_URL: ${{ secrets.ONEDRIVE_XLSX_URL }}
@@ -60,7 +65,7 @@ jobs:
           fi
 
   cleanup:
-    if: github.event_name == 'workflow_dispatch' && inputs.task == 'cleanup' || github.event.schedule == '0 16 * * *'
+    if: (github.event_name == 'workflow_dispatch' && inputs.task == 'cleanup') || github.event.schedule == '0 16 * * *'
     runs-on: ubuntu-latest
     env:
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
