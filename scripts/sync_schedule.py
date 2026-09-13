@@ -1,5 +1,5 @@
 import base64, io, json, os, re, pathlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 from zoneinfo import ZoneInfo
 
@@ -99,6 +99,43 @@ def get_xlsx_bytes(url):
     return file_resp.content
 
 
+def merged_time(first_time, periods):
+    """Turn repeated period cells into one readable class span.
+
+    The workbook repeats the same course once per class period.  Keep the
+    start of the first occurrence and infer the final bell from the number
+    of repeated periods (50-minute periods with 10-minute passing time).
+    Single entries keep their original time because some special classes are
+    stored as one merged block in the source workbook.
+    """
+    if periods <= 1:
+        return first_time
+    m=re.search(r'(\d{1,2}):(\d{2})', first_time or '')
+    if not m:
+        return first_time
+    start=datetime(2000,1,1,int(m.group(1)),int(m.group(2)))
+    end=start+timedelta(minutes=periods*60-10)
+    return f'{start:%H:%M}–{end:%H:%M}'
+
+
+def collapse_courses(courses):
+    grouped={}
+    order=[]
+    for c in courses:
+        key=(c['title'],c.get('teacher',''),c.get('room',''),c.get('credits'))
+        if key not in grouped:
+            grouped[key]={'first':c.copy(),'count':0}
+            order.append(key)
+        grouped[key]['count']+=1
+    out=[]
+    for key in order:
+        item=grouped[key]
+        c=item['first']
+        c['time']=merged_time(c.get('time',''),item['count'])
+        out.append(c)
+    return out
+
+
 def main():
     data=get_xlsx_bytes(URL)
     wb=load_workbook(io.BytesIO(data),data_only=False)
@@ -119,6 +156,8 @@ def main():
                     starts={3:'09:10–12:00',7:'09:10–12:00',11:'09:10–12:00',15:'13:10–16:00',19:'13:10–15:00',23:'15:10–17:00',27:'15:10–17:00',31:'13:10–16:00'}
                     time=starts.get(row,'')
                 days[day].append({'time':time,'title':title,'teacher':teacher,'room':room,'credits':credits})
+        for day in days:
+            days[day]=collapse_courses(days[day])
         people[name]=days
     OUT.parent.mkdir(parents=True,exist_ok=True)
     OUT.write_text(json.dumps({'updated_at':datetime.now(ZoneInfo('Asia/Taipei')).isoformat(),'people':people},ensure_ascii=False,separators=(',',':')),encoding='utf-8')
