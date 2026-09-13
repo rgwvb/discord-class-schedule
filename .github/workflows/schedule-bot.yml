@@ -1,8 +1,6 @@
 name: Schedule Bot
 
 on:
-  push:
-    branches: [main]
   schedule:
     - cron: '0 23 * * *' # 07:00 Asia/Taipei
     - cron: '0 16 * * *' # 00:00 Asia/Taipei
@@ -26,7 +24,7 @@ concurrency:
 
 jobs:
   sync-send:
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' && inputs.task == 'sync-send' || github.event.schedule == '0 23 * * *'
+    if: github.event_name == 'workflow_dispatch' && inputs.task == 'sync-send' || github.event.schedule == '0 23 * * *'
     runs-on: ubuntu-latest
     env:
       ONEDRIVE_XLSX_URL: ${{ secrets.ONEDRIVE_XLSX_URL }}
