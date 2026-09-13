@@ -7,23 +7,34 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="wrap">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">CLASS SCHEDULE</p>
-        <h1>青蛙課表</h1>
-        <p class="sub">網站預覽・圖片產生・Discord 每日公告</p>
-      </div>
-      <img class="frog" src="assets/frog.svg" alt="青蛙吉祥物" />
-    </section>
+  <div class="controls">
+    <div id="dayTabs" class="tabs"></div>
+    <p id="updated" class="updated"></p>
+  </div>
 
-    <section class="toolbar">
-      <div id="dayTabs" class="tabs"></div>
-      <p id="updated" class="updated"></p>
-    </section>
+  <main id="poster" class="poster">
+    <header class="poster-head">
+      <div class="scribble left">Better<br>Learning<br>A Brighter Tomorrow</div>
+      <div class="headline">
+        <div class="books" aria-hidden="true">📚</div>
+        <div>
+          <h1 id="posterTitle">今日課表｜週一</h1>
+          <p id="posterDate" class="poster-date"></p>
+        </div>
+      </div>
+      <div class="scribble right">Class<br>Schedule! ♡</div>
+      <img class="frog" src="assets/frog.svg" alt="青蛙吉祥物" />
+      <div class="notice">當日課表不完全相同，以下依相同課表分組顯示</div>
+    </header>
 
     <section id="schedule" class="schedule" aria-live="polite"></section>
+
+    <footer class="poster-foot">
+      <span>— 學習，讓明天更美好 —</span>
+      <span class="keep">Keep Going! :)</span>
+    </footer>
   </main>
+
   <script src="app.js"></script>
 </body>
 </html>
