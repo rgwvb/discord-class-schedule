@@ -15,12 +15,13 @@ def main():
     handler=lambda *a, **kw: QuietHandler(*a, directory=str(ROOT), **kw)
     with socketserver.TCPServer(('127.0.0.1',0),handler) as httpd:
         port=httpd.server_address[1]
-        t=threading.Thread(target=httpd.serve_forever,daemon=True); t.start()
+        t=threading.Thread(target=httpd.serve_forever,daemon=True)
+        t.start()
         with sync_playwright() as pw:
             browser=pw.chromium.launch()
-            page=browser.new_page(viewport={'width':1122,'height':1600},device_scale_factor=1)
+            page=browser.new_page(viewport={'width':1086,'height':1500},device_scale_factor=1)
             page.goto(f'http://127.0.0.1:{port}/?day={args.day}',wait_until='networkidle')
-            page.screenshot(path=args.output,full_page=True)
+            page.locator('#poster').screenshot(path=args.output)
             browser.close()
         httpd.shutdown()
 
