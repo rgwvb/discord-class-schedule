@@ -1,0 +1,83 @@
+name: Schedule Bot
+
+on:
+  schedule:
+    - cron: '0 23 * * *' # 07:00 Asia/Taipei
+    - cron: '0 16 * * *' # 00:00 Asia/Taipei
+  workflow_dispatch:
+    inputs:
+      task:
+        description: Action to run
+        required: true
+        default: sync-send
+        type: choice
+        options:
+          - sync-send
+          - cleanup
+
+permissions:
+  contents: write
+
+concurrency:
+  group: schedule-bot
+  cancel-in-progress: false
+
+jobs:
+  sync-send:
+    if: github.event_name == 'workflow_dispatch' && inputs.task == 'sync-send' || github.event.schedule == '0 23 * * *'
+    runs-on: ubuntu-latest
+    env:
+      ONEDRIVE_XLSX_URL: ${{ secrets.ONEDRIVE_XLSX_URL }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: playwright install --with-deps chromium
+      - name: Sync Excel
+        run: python scripts/sync_schedule.py
+      - name: Resolve Taipei weekday
+        id: day
+        run: |
+          DAY=$(TZ=Asia/Taipei date +%u)
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+      - name: Render timetable image
+        if: steps.day.outputs.day != '7'
+        run: python scripts/render_card.py --day ${{ steps.day.outputs.day }} --output schedule-card.png
+      - name: Send to Discord
+        if: steps.day.outputs.day != '7'
+        run: python scripts/send_discord.py
+      - name: Save updated data and message id
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/schedule.json data/last_message.json 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "Update timetable data"
+            git push
+          fi
+
+  cleanup:
+    if: github.event_name == 'workflow_dispatch' && inputs.task == 'cleanup' || github.event.schedule == '0 16 * * *'
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install requests==2.32.5
+      - name: Delete last timetable message
+        run: python scripts/cleanup_discord.py
+      - name: Save cleanup state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A data/last_message.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Clear timetable message state"
+            git push
+          fi
