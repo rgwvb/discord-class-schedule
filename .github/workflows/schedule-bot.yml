@@ -56,7 +56,11 @@ jobs:
           git add data/schedule.json data/last_message.json 2>/dev/null || true
           if ! git diff --cached --quiet; then
             git commit -m "Update timetable data"
-            git push
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+              sleep 2
+            done
           fi
 
   cleanup:
@@ -79,5 +83,9 @@ jobs:
           git add -A data/last_message.json
           if ! git diff --cached --quiet; then
             git commit -m "Clear timetable message state"
-            git push
+            for attempt in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+              sleep 2
+            done
           fi
