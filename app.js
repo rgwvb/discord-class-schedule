@@ -4,7 +4,8 @@ const sig=c=>JSON.stringify(c.map(x=>[x.time,x.title,x.teacher||'',x.room||'',x.
 async function main(){
   const data=await fetch('data/schedule.json',{cache:'no-store'}).then(r=>r.json());
   $('#updated').textContent=`資料更新：${new Date(data.updated_at).toLocaleString('zh-TW')}`;
-  const now=new Date(); let day=now.getDay(); day=(day>=1&&day<=6)?day:1;
+  const paramDay=Number(new URLSearchParams(location.search).get('day'));
+  const now=new Date(); let day=(paramDay>=1&&paramDay<=6)?paramDay:now.getDay(); day=(day>=1&&day<=6)?day:1;
   const tabs=$('#dayTabs');
   DAYS.forEach((d,i)=>{const b=document.createElement('button');b.textContent=`週${d}`;b.onclick=()=>render(i+1,b);tabs.appendChild(b)});
   function render(dayIndex,btn){
