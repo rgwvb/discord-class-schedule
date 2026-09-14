@@ -14,7 +14,9 @@ async function main(){
   const data=await fetch('data/schedule.json',{cache:'no-store'}).then(r=>r.json());
   $('#updated').textContent=`資料更新：${new Date(data.updated_at).toLocaleString('zh-TW')}`;
 
-  const paramDay=Number(new URLSearchParams(location.search).get('day'));
+  const params=new URLSearchParams(location.search);
+  const paramDay=Number(params.get('day'));
+  const person=params.get('person')||'';
   const now=new Date();
   let day=(paramDay>=1&&paramDay<=6)?paramDay:now.getDay();
   day=(day>=1&&day<=6)?day:1;
@@ -29,11 +31,14 @@ async function main(){
 
   function render(dayIndex,btn){
     [...tabs.children].forEach(x=>x.classList.toggle('active',x===btn));
-    $('#posterTitle').textContent=`今日課表｜週${DAYS[dayIndex-1]}`;
+    $('#posterTitle').textContent=person?`${person}｜週${DAYS[dayIndex-1]}課表`:`今日課表｜週${DAYS[dayIndex-1]}`;
     $('#posterDate').textContent=fmtDate(dayIndex);
+    const notice=$('#posterNotice');
+    if(notice) notice.textContent=person?'個人課表｜課程、時間、老師、教室、學分':'當日課表不完全相同，以下依相同課表分組顯示';
 
     const groups=new Map();
     Object.entries(data.people).forEach(([name,days])=>{
+      if(person && name!==person) return;
       const courses=days[String(dayIndex)]||[];
       const key=sig(courses);
       if(!groups.has(key)) groups.set(key,{names:[],courses});
