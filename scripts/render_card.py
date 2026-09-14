@@ -1,4 +1,5 @@
 import argparse, pathlib, threading, http.server, socketserver
+from urllib.parse import urlencode
 from playwright.sync_api import sync_playwright
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -10,6 +11,7 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
 def main():
     p=argparse.ArgumentParser()
     p.add_argument('--day', type=int, choices=range(1,7), required=True)
+    p.add_argument('--person', default='')
     p.add_argument('--output', default='schedule-card.png')
     args=p.parse_args()
     handler=lambda *a, **kw: QuietHandler(*a, directory=str(ROOT), **kw)
@@ -20,7 +22,10 @@ def main():
         with sync_playwright() as pw:
             browser=pw.chromium.launch()
             page=browser.new_page(viewport={'width':1086,'height':1500},device_scale_factor=1)
-            page.goto(f'http://127.0.0.1:{port}/?day={args.day}',wait_until='networkidle')
+            query={'day':args.day}
+            if args.person:
+                query['person']=args.person
+            page.goto(f'http://127.0.0.1:{port}/?{urlencode(query)}',wait_until='networkidle')
             page.locator('#poster').screenshot(path=args.output)
             browser.close()
         httpd.shutdown()
