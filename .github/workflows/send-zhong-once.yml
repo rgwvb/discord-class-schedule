@@ -1,0 +1,35 @@
+name: Send Zhong Timetable Once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/send-zhong-once.yml'
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    env:
+      ONEDRIVE_XLSX_URL: ${{ secrets.ONEDRIVE_XLSX_URL }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_CONTENT: '📚 鍾曜遠｜今日課表'
+      SAVE_STATE: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: playwright install --with-deps chromium
+      - name: Sync Excel
+        run: python scripts/sync_schedule.py
+      - name: Resolve Taipei weekday
+        id: day
+        run: |
+          DAY=$(TZ=Asia/Taipei date +%u)
+          echo "day=$DAY" >> "$GITHUB_OUTPUT"
+      - name: Render Zhong timetable
+        if: steps.day.outputs.day != '7'
+        run: python scripts/render_card.py --day ${{ steps.day.outputs.day }} --person '鍾曜遠' --output schedule-card.png
+      - name: Send Zhong timetable to Discord
+        if: steps.day.outputs.day != '7'
+        run: python scripts/send_discord.py
