@@ -29,6 +29,7 @@ jobs:
     env:
       ONEDRIVE_XLSX_URL: ${{ secrets.ONEDRIVE_XLSX_URL }}
       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_CONTENT: '📚 星期二課表｜全員版'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -38,16 +39,9 @@ jobs:
       - run: playwright install --with-deps chromium
       - name: Sync Excel
         run: python scripts/sync_schedule.py
-      - name: Resolve Taipei weekday
-        id: day
-        run: |
-          DAY=$(TZ=Asia/Taipei date +%u)
-          echo "day=$DAY" >> "$GITHUB_OUTPUT"
-      - name: Render timetable image
-        if: steps.day.outputs.day != '7'
-        run: python scripts/render_card.py --day ${{ steps.day.outputs.day }} --output schedule-card.png
-      - name: Send to Discord
-        if: steps.day.outputs.day != '7'
+      - name: Render Tuesday timetable image
+        run: python scripts/render_card.py --day 2 --output schedule-card.png
+      - name: Send Tuesday timetable to Discord
         run: python scripts/send_discord.py
       - name: Save updated data and message id
         run: |
