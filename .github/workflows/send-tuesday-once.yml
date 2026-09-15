@@ -1,0 +1,28 @@
+name: Send Tuesday Timetable Once
+
+on:
+  push:
+    paths:
+      - '.github/workflows/send-tuesday-once.yml'
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    env:
+      ONEDRIVE_XLSX_URL: ${{ secrets.ONEDRIVE_XLSX_URL }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_CONTENT: '📚 星期二課表｜全員版'
+      SAVE_STATE: '0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: playwright install --with-deps chromium
+      - name: Sync Excel
+        run: python scripts/sync_schedule.py
+      - name: Render Tuesday timetable
+        run: python scripts/render_card.py --day 2 --output schedule-card.png
+      - name: Send Tuesday timetable to Discord
+        run: python scripts/send_discord.py
