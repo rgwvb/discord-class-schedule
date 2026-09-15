@@ -26,3 +26,5 @@ jobs:
         run: python scripts/render_card.py --week --person '鍾曜遠' --output schedule-card.png
       - name: Send Zhong weekly timetable to Discord
         run: python scripts/send_discord.py
+
+# retrigger 2026-09-15 channel verification
