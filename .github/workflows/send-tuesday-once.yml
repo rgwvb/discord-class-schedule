@@ -1,9 +1,7 @@
 name: Send Tuesday Timetable Once
 
 on:
-  push:
-    paths:
-      - '.github/workflows/send-tuesday-once.yml'
+  workflow_dispatch:
 
 jobs:
   send:
